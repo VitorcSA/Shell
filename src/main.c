@@ -17,9 +17,9 @@ int main(int argc,char *argv[]){
 	struct sigaction sigAgction;
 
 	sigAgction.sa_handler = HandleSigchld;
-	sigemptyset(sigAgction.sa_mask);
+	sigemptyset(&sigAgction.sa_mask);
 	sigAgction.sa_flags = SA_NOCLDSTOP;
-	sigaction(SIGCHLD,&sigAgction,);
+	sigaction(SIGCHLD,&sigAgction,0);
 
 	char *line = NULL, **inputs = NULL;
 	size_t inputSize;
@@ -33,8 +33,6 @@ int main(int argc,char *argv[]){
 			Execute(inputs[i]);
 		};
 
-		CheckForCompletedJobs();
-		
 		free(inputs);
 
 	};

@@ -1,5 +1,6 @@
 #include "utilities.h"
 
+#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <iso646.h>
 #include <stdbool.h>
@@ -41,7 +42,7 @@ bool TryPipelineExecution(char *command);
 bool NormalExecutation(char *command);
 bool CheckIsBackground(char *command);
 int AddJob(TableJob *tableJob,pid_t processId,const char *command);
-int CheckForCompletedJobs();
+void HandleSigchld(int sig);
 
 void GetInput(char **str,size_t *size){
 	mode == SEQUENTIAL ? printf("seq > ") : printf("par >");
@@ -329,26 +330,14 @@ int DeleteJobByPid(TableJob *tableJob,pid_t processId){
 	return -1;
 };
 
-int CheckForCompletedJobs(){
-	int status;
-	pid_t completedProcessId;
-	if((completedProcessId = waitpid(-1,&status,WNOHANG)) > 0){
-		return DeleteJobByPid(&tableJob,completedProcessId);
-	};
-
-	return  -1;
-
-};
-
-void HandleSigchld(){
-	int oldErrno = errno;
+void HandleSigchld(int sig){
+	int savedErrno = errno,status;
 	pid_t completedProcessId;
 
-	while (completedProcessId = waitpid) {
-	
+	while ((completedProcessId = waitpid(-1,&status,0)) > 0){
+		putchar('\n');
+		DeleteJobByPid(&tableJob,completedProcessId);
 	}
 
-
-
-	errno = oldErrno;
+	errno = savedErrno;
 };

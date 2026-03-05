@@ -46,7 +46,12 @@ void HandleSigchld(int sig);
 
 void GetInput(char **str,size_t *size){
 	mode == SEQUENTIAL ? printf("seq > ") : printf("par >");
-	getline(str,size,stdin);
+	if(getline(str,size,stdin) == -1){
+		if(errno == EINTR){
+			clearerr(stdin);
+			(*str) = NULL;
+		}
+	};
 	putchar('\n');
 }
 

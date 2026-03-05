@@ -8,4 +8,7 @@ void GetInput(char **str,size_t *size);
 char **SliceInput(char *input);
 bool Execute(char *command);
 
+void InitTableJob();
+void HandleSigchld(int sig);
+
 #endif

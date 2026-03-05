@@ -14,6 +14,14 @@ typedef enum Mode{
     PARALLEL,
 }Mode;
 
+typedef struct BackgroundJob{
+	pid_t processId;
+	bool isActive;
+	char *command;
+}BackgroundJob;
+
+BackgroundJob jobs[100] = {0};
+
 Mode mode = SEQUENTIAL;
 
 char **CheckIsInputRedirection(char *command);
@@ -241,5 +249,11 @@ bool CheckIsBackground(char *command){
 	};
 
 	return isBackground;
+
+};
+
+void AddJob(pid_t proce){
+
+
 
 };

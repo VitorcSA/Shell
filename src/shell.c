@@ -10,17 +10,22 @@
 #include <sys/wait.h>
 
 typedef enum Mode{
-    SEQUENTIAL,
-    PARALLEL,
+	SEQUENTIAL,
+	PARALLEL,
 }Mode;
 
-typedef struct BackgroundJob{
+typedef struct Job{
 	pid_t processId;
 	bool isActive;
 	char *command;
-}BackgroundJob;
+}Job;
 
-BackgroundJob jobs[100] = {0};
+typedef	struct TableJob{
+	size_t capacity;
+	Job *data;
+}TableJob;
+
+TableJob tableJob = {0};
 
 Mode mode = SEQUENTIAL;
 
@@ -252,8 +257,47 @@ bool CheckIsBackground(char *command){
 
 };
 
-void AddJob(pid_t proce){
+void InitTableJob(){
+	tableJob.capacity = 8;
+	tableJob.data = calloc(tableJob.capacity,sizeof(Job));
+};
 
+bool AddJob(TableJob *tableJob,pid_t processId,const char *command){
+	size_t end = tableJob->capacity;
+	
+	for(size_t i = 0; i < end ; i++){
+		if(tableJob->data[i].isActive == false){
+			tableJob->data[i].isActive = true;
+			tableJob->data[i].processId = processId;
+			tableJob->data[i].command = strdup(command);
+			return true;
+		};
+	};
 
+	tableJob->capacity *= 2;
+	tableJob->data = realloc(tableJob->data,sizeof(Job) * tableJob->capacity);
+	for(size_t i = end+1,newEnd = tableJob->capacity;i < newEnd;i++){
+		tableJob->data[i].isActive = false;
+	};
+	
+	tableJob->data[end].isActive = true;
+	tableJob->data[end].processId = processId;
+	tableJob->data[end].command = strdup(command);
 
+	return true;
+
+};
+
+bool DeleteJob(TableJob *tableJob,int index){
+	if(index >= tableJob->capacity) return false;
+
+	if(tableJob->data[index].isActive == true){
+		tableJob->data[index].isActive = false;
+		free(tableJob->data[index].command);
+		tableJob->data[index].command = NULL;
+
+		return true;
+	};
+
+	return false;
 };

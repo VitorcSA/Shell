@@ -1,5 +1,7 @@
 #include "shell.h"
+#include <signal.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 
@@ -10,6 +12,14 @@ int main(int argc,char *argv[]){
 	};
 
 	system("clear");
+
+	InitTableJob();
+	struct sigaction sigAgction;
+
+	sigAgction.sa_handler = HandleSigchld;
+	sigemptyset(sigAgction.sa_mask);
+	sigAgction.sa_flags = SA_NOCLDSTOP;
+	sigaction(SIGCHLD,&sigAgction,);
 
 	char *line = NULL, **inputs = NULL;
 	size_t inputSize;
@@ -23,6 +33,8 @@ int main(int argc,char *argv[]){
 			Execute(inputs[i]);
 		};
 
+		CheckForCompletedJobs();
+		
 		free(inputs);
 
 	};

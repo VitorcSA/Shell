@@ -1,6 +1,9 @@
 #include "utilities.h"
 
+#include <errno.h>
+#include <iso646.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,12 +40,14 @@ void ExecutePipeline(char **pipeCommands);
 bool TryPipelineExecution(char *command);
 bool NormalExecutation(char *command);
 bool CheckIsBackground(char *command);
+int AddJob(TableJob *tableJob,pid_t processId,const char *command);
+int CheckForCompletedJobs();
 
 void GetInput(char **str,size_t *size){
 	mode == SEQUENTIAL ? printf("seq > ") : printf("par >");
 	getline(str,size,stdin);
-	printf("\n");
-};
+	putchar('\n');
+}
 
 char **SliceInput(char *input){
 	char **inputs = SliceStr(input,";\n");
@@ -230,6 +235,11 @@ bool NormalExecutation(char *command){
 		waitpid(processId,&status,0);
 	}
 
+	if(isBackground){
+		int index = AddJob(&tableJob,processId,command);
+		printf("[%i] %i\n",index+1,processId);
+	};
+
 	free(args);
 	return true;
 };
@@ -262,7 +272,7 @@ void InitTableJob(){
 	tableJob.data = calloc(tableJob.capacity,sizeof(Job));
 };
 
-bool AddJob(TableJob *tableJob,pid_t processId,const char *command){
+int AddJob(TableJob *tableJob,pid_t processId,const char *command){
 	size_t end = tableJob->capacity;
 	
 	for(size_t i = 0; i < end ; i++){
@@ -270,7 +280,7 @@ bool AddJob(TableJob *tableJob,pid_t processId,const char *command){
 			tableJob->data[i].isActive = true;
 			tableJob->data[i].processId = processId;
 			tableJob->data[i].command = strdup(command);
-			return true;
+			return i;
 		};
 	};
 
@@ -284,7 +294,7 @@ bool AddJob(TableJob *tableJob,pid_t processId,const char *command){
 	tableJob->data[end].processId = processId;
 	tableJob->data[end].command = strdup(command);
 
-	return true;
+	return end;
 
 };
 
@@ -300,4 +310,45 @@ bool DeleteJob(TableJob *tableJob,int index){
 	};
 
 	return false;
+};
+
+int DeleteJobByPid(TableJob *tableJob,pid_t processId){
+	for(size_t i = 0,end = tableJob->capacity;i < end;i++){
+		if(processId == tableJob->data[i].processId){
+			printf("[%ld] %i completado %s\n",i+1,processId,tableJob->data[i].command);
+			tableJob->data[i].isActive = false;
+			free(tableJob->data[i].command);
+			tableJob->data[i].command = NULL;
+		
+			return i;
+		};
+
+	};
+
+
+	return -1;
+};
+
+int CheckForCompletedJobs(){
+	int status;
+	pid_t completedProcessId;
+	if((completedProcessId = waitpid(-1,&status,WNOHANG)) > 0){
+		return DeleteJobByPid(&tableJob,completedProcessId);
+	};
+
+	return  -1;
+
+};
+
+void HandleSigchld(){
+	int oldErrno = errno;
+	pid_t completedProcessId;
+
+	while (completedProcessId = waitpid) {
+	
+	}
+
+
+
+	errno = oldErrno;
 };

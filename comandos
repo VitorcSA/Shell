@@ -1,0 +1,9 @@
+ls
+ls
+ls
+ls
+echo teste
+sleep 10 &
+echo teste2
+sleep 10
+echo teste

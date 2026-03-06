@@ -1,6 +1,6 @@
 #include "utilities.h"
+#include "shell.h"
 
-#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <iso646.h>
 #include <stdbool.h>
@@ -12,12 +12,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
-typedef enum Mode{
-	SEQUENTIAL,
-	PARALLEL,
-}Mode;
-
 typedef struct Job{
 	pid_t processId;
 	bool isActive;
@@ -42,14 +36,15 @@ bool TryPipelineExecution(char *command);
 bool NormalExecutation(char *command);
 bool CheckIsBackground(char *command);
 int AddJob(TableJob *tableJob,pid_t processId,const char *command);
-void HandleSigchld(int sig);
+bool DeleteJob(TableJob *tableJob,int index);
+void HandleSigchl(int sig);
 
 void GetInput(char **str,size_t *size){
 	mode == SEQUENTIAL ? printf("seq > ") : printf("par >");
 	if(getline(str,size,stdin) == -1){
 		if(errno == EINTR){
 			clearerr(stdin);
-			(*str) = NULL;
+			(*str)[0] = '\0';
 		}
 	};
 	putchar('\n');
@@ -161,7 +156,13 @@ char **CheckIsPipeCommand(char *command){
 
 void ExecutePipeline(char **pipeCommands){
 	int fileDescriptors[2],lastReadFileDescriptor = 0;
+	Job *tableJobs;
 	char **args = NULL;
+
+	int numCommands;
+	for (numCommands = 0;pipeCommands[numCommands] != NULL;numCommands++){}
+
+	pid_t *processIds = malloc(sizeof(pid_t)*numCommands);
 
 	for(size_t i = 0;pipeCommands[i] != NULL;i++){
 
@@ -186,12 +187,29 @@ void ExecutePipeline(char **pipeCommands){
 
 			args = SliceStr(pipeCommands[i]," \n");
 
+			if(!strcmp("cd", args[0])){
+				chdir(args[1]);
+				free(args);
+				exit(0);
+			} else if(!strcmp("exit", args[0])){
+				free(args);
+				exit(0); 
+			} else if(!strcmp("style", args[0])){
+		                free(args);
+        			exit(0);
+			} else if(!strcmp("fg", args[0])){
+				free(args);
+				exit(0);
+			}
+
 			if(execvp(args[0],args) == -1){
 				perror("Comando Não Encontrado");
 				free(args);
 				exit(EXIT_FAILURE);
 			};
 		};
+
+		processIds[i] = processId;
 
 		if(lastReadFileDescriptor != 0){
 			close(lastReadFileDescriptor);
@@ -205,7 +223,13 @@ void ExecutePipeline(char **pipeCommands){
 
 	};
 
-	while (wait(NULL) > 0){};
+	for(int i =0;i< numCommands;i++){
+		int status;
+		waitpid(processIds[i],&status,0);
+	};
+
+	free(processIds);
+
 };
 
 bool NormalExecutation(char *command){
@@ -223,7 +247,28 @@ bool NormalExecutation(char *command){
 	}else if(!strcmp("exit",args[0])){
 		free(args);
 		exit(0);
-	}
+	}else if(!strcmp("style",args[0])){
+		if(!strcmp("sequential",args[1])){
+			mode = SEQUENTIAL;
+		}else if(!strcmp("parallel",args[1])){
+			mode = PARALLEL;
+		};
+
+		free(args);
+		return  true;
+	}else if(!strcmp("fg",args[0])){
+		int index = atoi(args[1]);
+		if(index > tableJob.capacity) return false;
+
+		if(tableJob.data[index-1].isActive == true){
+			int status;
+			waitpid(tableJob.data[index-1].processId,&status,0);
+			DeleteJob(&tableJob,index-1);
+			return true;
+		};
+
+		return false;
+	};
 
 	pid_t processId = fork();
 	if(processId < 0) perror("fork falhou.");
@@ -339,7 +384,7 @@ void HandleSigchld(int sig){
 	int savedErrno = errno,status;
 	pid_t completedProcessId;
 
-	while ((completedProcessId = waitpid(-1,&status,0)) > 0){
+	while ((completedProcessId = waitpid(-1,&status,WNOHANG)) > 0){
 		putchar('\n');
 		DeleteJobByPid(&tableJob,completedProcessId);
 	}

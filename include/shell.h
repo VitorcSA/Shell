@@ -4,6 +4,11 @@
 #include <stddef.h>
 #include <utilities.h>
 
+typedef enum Mode{
+	SEQUENTIAL,
+	PARALLEL,
+}Mode;
+
 void GetInput(char **str,size_t *size);
 char **SliceInput(char *input);
 bool Execute(char *command);

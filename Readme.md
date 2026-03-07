@@ -28,5 +28,5 @@
 > *_Contem a implementação de todas as funções primordiais para a execução do shell_*
 
 3. utilities.c
-> *_Contem a implementação de funções que não podem ser ultilizadas em situaçções gerais_*
+> *_Contem a implementação de funções que podem ser ultilizadas em situações gerais_*
 

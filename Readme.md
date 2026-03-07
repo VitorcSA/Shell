@@ -1,4 +1,8 @@
 
+# Informações:
+
+Esse shell foi programado, executado e testado em Linux;
+
 
 # Arquitetura
 
@@ -29,4 +33,20 @@
 
 3. utilities.c
 > *_Contem a implementação de funções que podem ser ultilizadas em situações gerais_*
+
+# Implementação
+
+##Como compilar?
+
+* Para compilar o shell, basta digitar:
+~~~
+make
+~~~
+
+## Como Executar?
+
+* Para fazer a execução do shell, basta compila-lo e digitar:
+~~~
+./shell
+~~~
 

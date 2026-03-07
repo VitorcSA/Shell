@@ -9,6 +9,14 @@
 extern Mode mode;
 
 int main(int argc,char *argv[]){
+	InitTableJob();
+	struct sigaction sigAgction;
+
+	sigAgction.sa_handler = HandleSigchld;
+	sigemptyset(&sigAgction.sa_mask);
+	sigAgction.sa_flags = SA_NOCLDSTOP;
+	sigaction(SIGCHLD,&sigAgction,0);
+
 	if(argc != 1){
 		if(argc > 2) return 0;
 
@@ -43,14 +51,6 @@ int main(int argc,char *argv[]){
 
 	system("clear");
 
-	InitTableJob();
-	struct sigaction sigAgction;
-
-	sigAgction.sa_handler = HandleSigchld;
-	sigemptyset(&sigAgction.sa_mask);
-	sigAgction.sa_flags = SA_NOCLDSTOP;
-	sigaction(SIGCHLD,&sigAgction,0);
-
 	char *line = NULL, **inputs = NULL;
 	size_t inputSize;
 
@@ -74,4 +74,3 @@ int main(int argc,char *argv[]){
 
 	return 0;
 }
-

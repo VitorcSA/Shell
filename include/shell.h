@@ -16,4 +16,7 @@ bool Execute(char *command);
 void InitTableJob();
 void HandleSigchld(int sig);
 
+extern char *line;
+extern char **inputs;
+
 #endif

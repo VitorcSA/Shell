@@ -20,15 +20,12 @@ int main(int argc,char *argv[]){
 	if(argc != 1){
 		if(argc > 2) return 0;
 
-		InitTableJob();
-
 		FILE *file = fopen(argv[1],"r");
 		if(file == NULL){
 			perror("Erro ao abrir o arquivo");
 			return 1;
 		};
 
-		char **inputs = NULL, *line = NULL;
 		size_t inputSize;
 
 		while(getline(&line,&inputSize,file) != -1){;
@@ -51,7 +48,6 @@ int main(int argc,char *argv[]){
 
 	system("clear");
 
-	char *line = NULL, **inputs = NULL;
 	size_t inputSize;
 
 	while (1) {

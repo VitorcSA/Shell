@@ -7,3 +7,4 @@ sleep 10 &
 echo teste2
 sleep 10
 echo teste
+ls -l | sort -k 5n

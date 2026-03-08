@@ -1,7 +1,6 @@
 
 # Relatorio
 
-
 ## Objetivo:
 
 O meu shell implementa a execução interativa e por meio de batch, aceita mais de um comando por linha de comando, contem estilos de execução, contem suporte para pipes, contem redirecionamento de entrada e saida, contem suporte para mudança de diretorios e contem execução em background, suportando o comando fg.
@@ -249,6 +248,35 @@ Para pegar os inputs de um arquivo apenas fiz verificações se um arquivo for i
 
 ![imagem com o codigo do prompt por arquivo funcionando](https://github.com/VitorcSA/Shell/raw/main/media/images/Captura_de_tela_20260307_204026.png)
 
+# Uso de IA
 
+não utilizei
 
+# Se eu tivesse mais 2 horas
+
+Começaria fazendo ua melhora na organização do projeto, separando ele em mais arquivos e tornando cada arquivo mais limpo e objetivo.  
+Faria mais testes para identificar de forma clara bugs e faria uma refatoração de algumas funções.
+
+# Checklist final
+
+* ~~Eu consigo compilar do zero seguindo o relatorio.~~
+
+* Eu consigo rodar meus testes e gerar evidencias.log.
+
+* ~~Minhas ocorrencias tem prints e rastros no log.~~
+
+* ~~Eu tratei entradas invalidas e registrei comportamento esperado.~~
+
+* Eu rodei pelo menos um caso limite e um caso invalido.
+
+* ~~Eu registrei o momento em que achei que estava certo.~~  
+
+* ~~Eu revisei o relatorio para remover trechos genericos e frases vagas.~~
+
+# Principais decisões tecnicas
+
+|Decisão|Motivo|Consequencia|
+|-------|------|------------|
+|Utilizar arrays dinamicos|Liberdade do usuario|Maior uso de processamento/complexividade do codigo|
+|Utilizar sigaction|Execução mais fluida|Codigo mais imprevisivel|
 

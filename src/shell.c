@@ -3,6 +3,7 @@
 
 #include <errno.h>
 #include <iso646.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -23,6 +24,9 @@ typedef	struct TableJob{
 	Job *data;
 }TableJob;
 
+char *line = NULL;
+char **inputs = NULL;
+
 TableJob tableJob = {0};
 
 Mode mode = SEQUENTIAL;
@@ -38,13 +42,15 @@ bool CheckIsBackground(char *command);
 int AddJob(TableJob *tableJob,pid_t processId,const char *command);
 bool DeleteJob(TableJob *tableJob,int index);
 void HandleSigchl(int sig);
+void CleanupJobs();
+
 
 void GetInput(char **str,size_t *size){
 	mode == SEQUENTIAL ? printf("seq > ") : printf("par >");
 	if(getline(str,size,stdin) == -1){
 		if(errno == EINTR){
 			clearerr(stdin);
-			(*str)[0] = '\0';
+			if(*str) (*str)[0] = '\0';
 		}
 	};
 	putchar('\n');
@@ -115,10 +121,10 @@ char **CheckIsOutputRedirection(char *command,bool *isAppend){
 		}else *isAppend = 0;
 
 	char **redirectionCommand = SliceStr(command,">\n");
-    if(redirectionCommand[1] == NULL){
-        free(redirectionCommand);
-        return NULL;
-    };
+	if(redirectionCommand[1] == NULL){
+		free(redirectionCommand);
+		return NULL;
+	};
 
     return redirectionCommand;
 };
@@ -126,6 +132,7 @@ char **CheckIsOutputRedirection(char *command,bool *isAppend){
 char **CheckIsInputRedirection(char *command){
 	char **inputRedirectionCommand = SliceStr(command,"<\n");
 	if(inputRedirectionCommand[1] == NULL){
+		free(inputRedirectionCommand);
 		return NULL;
 	}
 
@@ -242,10 +249,12 @@ bool NormalExecutation(char *command){
 	};
 
 	if(!strcmp("cd",args[0])){
-		chdir(args[1]);
+		if(args[1]) chdir(args[1]);
+		free(args);
 		return true;
 	}else if(!strcmp("exit",args[0])){
 		free(args);
+		CleanupJobs();
 		exit(0);
 	}else if(!strcmp("style",args[0])){
 		if(!strcmp("sequential",args[1])){
@@ -258,15 +267,20 @@ bool NormalExecutation(char *command){
 		return  true;
 	}else if(!strcmp("fg",args[0])){
 		int index = atoi(args[1]);
-		if(index > tableJob.capacity) return false;
+		if(index > tableJob.capacity){
+			free(args);
+			return false;
+		};
 
 		if(tableJob.data[index-1].isActive == true){
 			int status;
 			waitpid(tableJob.data[index-1].processId,&status,0);
 			DeleteJob(&tableJob,index-1);
+			free(args);
 			return true;
 		};
 
+		free(args);
 		return false;
 	};
 
@@ -276,6 +290,7 @@ bool NormalExecutation(char *command){
 	if(processId == 0){
 		if(execvp(args[0],args) == -1){
 			perror("Comando não encontrado");
+			free(args);
 			exit(EXIT_FAILURE);
 		};
 		return true;
@@ -378,6 +393,19 @@ int DeleteJobByPid(TableJob *tableJob,pid_t processId){
 
 
 	return -1;
+};
+
+void CleanupJobs(){
+
+	for(size_t i = 0,end = tableJob.capacity;i<end;i++){
+		if(tableJob.data[i].command)
+			free(tableJob.data[i].command);
+	};
+	free(tableJob.data);
+
+
+	free(line);
+	free(inputs);
 };
 
 void HandleSigchld(int sig){
